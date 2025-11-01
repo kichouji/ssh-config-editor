@@ -2,11 +2,15 @@
 
 SSH設定ファイル（`~/.ssh/config`）を視覚的に編集できるモダンなGUIアプリケーション（Windows版）
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 [English](README.md) | 日本語
+
+## スクリーンショット
+
+![SSH Config Editor Screenshot](img/screenshot.png)
 
 ## 特徴
 
@@ -63,7 +67,7 @@ SSH設定ファイル（`~/.ssh/config`）を視覚的に編集できるモダ�
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/yourusername/ssh-config-editor.git
+git clone https://github.com/kichouji/ssh-config-editor.git
 cd ssh-config-editor
 
 # 依存パッケージをインストール
