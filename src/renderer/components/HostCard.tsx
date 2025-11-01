@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
 import { SSHHostEntry, SSHProperty } from '../../types/ssh-config';
 import HostEditForm from './HostEditForm';
-import { extractLocalForwardPort } from '../../constants/ssh-properties';
+import { detectDuplicateLocalForwardPorts } from '../../utils/validation-utils';
 
 interface HostCardProps {
   host: SSHHostEntry;
@@ -103,30 +103,7 @@ const HostCard: React.FC<HostCardProps> = ({
 
   // Detect duplicate LocalForward ports (only for enabled entries)
   const duplicatePortIndices = useMemo(() => {
-    const duplicates = new Set<number>();
-    const portToIndices = new Map<string, number[]>();
-
-    // Collect all LocalForward entries with their ports
-    host.properties.forEach((prop, index) => {
-      if (prop.key === 'LocalForward' && prop.enabled) {
-        const port = extractLocalForwardPort(prop.value);
-        if (port) {
-          if (!portToIndices.has(port)) {
-            portToIndices.set(port, []);
-          }
-          portToIndices.get(port)!.push(index);
-        }
-      }
-    });
-
-    // Mark indices with duplicate ports
-    portToIndices.forEach((indices) => {
-      if (indices.length > 1) {
-        indices.forEach(index => duplicates.add(index));
-      }
-    });
-
-    return duplicates;
+    return detectDuplicateLocalForwardPorts(host.properties);
   }, [host.properties]);
 
   return (

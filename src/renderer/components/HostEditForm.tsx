@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { SSHHostEntry, SSHProperty } from '../../types/ssh-config';
-import { isMultiValueProperty, isToggleableProperty, COMMON_SSH_PROPERTIES, extractLocalForwardPort } from '../../constants/ssh-properties';
+import { isMultiValueProperty, isToggleableProperty, COMMON_SSH_PROPERTIES } from '../../constants/ssh-properties';
+import { detectDuplicateLocalForwardPorts } from '../../utils/validation-utils';
 
 interface HostEditFormProps {
   host: SSHHostEntry;
@@ -47,30 +48,7 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
 
   // Detect duplicate LocalForward ports (only for enabled entries)
   const duplicatePortIndices = useMemo(() => {
-    const duplicates = new Set<number>();
-    const portToIndices = new Map<string, number[]>();
-
-    // Collect all LocalForward entries with their ports
-    editedHost.properties.forEach((prop, index) => {
-      if (prop.key === 'LocalForward' && prop.enabled) {
-        const port = extractLocalForwardPort(prop.value);
-        if (port) {
-          if (!portToIndices.has(port)) {
-            portToIndices.set(port, []);
-          }
-          portToIndices.get(port)!.push(index);
-        }
-      }
-    });
-
-    // Mark indices with duplicate ports
-    portToIndices.forEach((indices) => {
-      if (indices.length > 1) {
-        indices.forEach(index => duplicates.add(index));
-      }
-    });
-
-    return duplicates;
+    return detectDuplicateLocalForwardPorts(editedHost.properties);
   }, [editedHost.properties]);
 
   const handleHostChange = (field: string, value: string) => {
