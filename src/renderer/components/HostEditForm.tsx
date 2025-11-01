@@ -19,6 +19,7 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
   const [editedHost, setEditedHost] = useState<SSHHostEntry>({ ...host });
   const [newPropertyKey, setNewPropertyKey] = useState<string>('');
   const [newPropertyValue, setNewPropertyValue] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   // Group properties by key
   const propertyGroups = useMemo(() => {
@@ -102,7 +103,8 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
 
   const handleAddProperty = () => {
     if (!newPropertyKey.trim() || !newPropertyValue.trim()) {
-      alert('Please enter both property key and value');
+      setErrorMessage('Please enter both property key and value');
+      setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
 
@@ -119,11 +121,13 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
     });
     setNewPropertyKey('');
     setNewPropertyValue('');
+    setErrorMessage('');
   };
 
   const handleSave = () => {
     if (!editedHost.host.trim()) {
-      alert('Host pattern is required');
+      setErrorMessage('Host pattern is required');
+      setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
 
@@ -140,6 +144,11 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
 
   return (
     <div className="host-edit-form">
+      {errorMessage && (
+        <div className="error-message">
+          {errorMessage}
+        </div>
+      )}
       <div className="form-group">
         <label>Host Pattern *</label>
         <input
@@ -213,25 +222,22 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
       <div className="form-section">
         <h4>Add Property</h4>
         <div className="property-add-container">
-          <div className="property-select-row">
-            <label>Select from common properties:</label>
-            <select
-              className="form-input property-key-select"
-              value=""
-              onChange={(e) => {
-                if (e.target.value) {
-                  setNewPropertyKey(e.target.value);
-                }
-              }}
-            >
-              <option value="">-- Select a property --</option>
-              {COMMON_SSH_PROPERTIES.map((prop) => (
-                <option key={prop} value={prop}>
-                  {prop}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            className="form-input property-key-select"
+            value=""
+            onChange={(e) => {
+              if (e.target.value) {
+                setNewPropertyKey(e.target.value);
+              }
+            }}
+          >
+            <option value="">-- Select a property --</option>
+            {COMMON_SSH_PROPERTIES.map((prop) => (
+              <option key={prop} value={prop}>
+                {prop}
+              </option>
+            ))}
+          </select>
           <div className="property-edit-row">
             <input
               type="text"

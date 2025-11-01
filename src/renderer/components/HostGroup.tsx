@@ -28,6 +28,7 @@ const HostGroup: React.FC<HostGroupProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(group.name);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleSaveEdit = () => {
     if (editedName.trim() && onEditGroupName) {
@@ -42,9 +43,16 @@ const HostGroup: React.FC<HostGroupProps> = ({
   };
 
   const handleDelete = () => {
-    if (confirm(`Delete group "${group.name}"? All hosts will be moved to ungrouped.`)) {
-      onDeleteGroup?.(group.id);
-    }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    onDeleteGroup?.(group.id);
+    setShowDeleteConfirm(false);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -100,6 +108,21 @@ const HostGroup: React.FC<HostGroupProps> = ({
           </>
         )}
       </div>
+      {showDeleteConfirm && (
+        <div className="confirm-dialog">
+          <p className="confirm-message">
+            Delete group "{group.name}"? All hosts will be moved to ungrouped.
+          </p>
+          <div className="confirm-actions">
+            <button className="btn btn-sm btn-danger" onClick={confirmDelete}>
+              Delete
+            </button>
+            <button className="btn btn-sm btn-secondary" onClick={cancelDelete}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       <Droppable droppableId={`group-${group.id}`}>
         {(provided, snapshot) => (
           <div

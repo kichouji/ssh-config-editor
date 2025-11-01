@@ -20,6 +20,7 @@ export function useSSHConfig() {
   const [newlyAddedHostId, setNewlyAddedHostId] = useState<string | null>(null);
   const [newlyAddedGroupId, setNewlyAddedGroupId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showReloadConfirm, setShowReloadConfirm] = useState<boolean>(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll when a new host is added
@@ -85,14 +86,21 @@ export function useSSHConfig() {
 
   const handleReload = useCallback(() => {
     if (hasChanges) {
-      if (confirm('You have unsaved changes. Are you sure you want to reload?')) {
-        loadConfiguration();
-        setHasChanges(false);
-      }
+      setShowReloadConfirm(true);
     } else {
       loadConfiguration();
     }
   }, [hasChanges, loadConfiguration]);
+
+  const confirmReload = useCallback(() => {
+    loadConfiguration();
+    setHasChanges(false);
+    setShowReloadConfirm(false);
+  }, [loadConfiguration]);
+
+  const cancelReload = useCallback(() => {
+    setShowReloadConfirm(false);
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (!configData) return;
@@ -102,11 +110,14 @@ export function useSSHConfig() {
 
       if (result.success) {
         setHasChanges(false);
+        setError(null);
       } else {
-        alert(`Error: ${result.message}`);
+        setError(`Save failed: ${result.message}`);
+        setTimeout(() => setError(null), 5000);
       }
     } catch (err) {
-      alert(`Error saving configuration: ${err}`);
+      setError(`Error saving configuration: ${err}`);
+      setTimeout(() => setError(null), 5000);
     }
   }, [configData]);
 
@@ -308,9 +319,12 @@ export function useSSHConfig() {
     hasChanges,
     contentRef,
     searchQuery,
+    showReloadConfirm,
 
     // Host Actions
     handleReload,
+    confirmReload,
+    cancelReload,
     handleSave,
     getTotalHostCount,
     handleDragEnd,

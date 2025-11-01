@@ -26,6 +26,7 @@ const HostCard: React.FC<HostCardProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Handle expand all trigger
@@ -73,11 +74,18 @@ const HostCard: React.FC<HostCardProps> = ({
   };
 
   const handleDelete = () => {
-    if (confirm(`Are you sure you want to delete host "${host.host}"?`)) {
-      if (onDelete) {
-        onDelete(host.id);
-      }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (onDelete) {
+      onDelete(host.id);
     }
+    setShowDeleteConfirm(false);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
   };
 
   const handleDuplicate = () => {
@@ -131,20 +139,36 @@ const HostCard: React.FC<HostCardProps> = ({
                 <p className="no-properties">No properties configured</p>
               )}
 
-              <div className="host-card-actions">
-                <button className="btn btn-sm btn-secondary" onClick={handleEdit}>
-                  Edit
-                </button>
-                <button className="btn btn-sm btn-secondary" onClick={handleDuplicate}>
-                  Duplicate
-                </button>
-                <button className="btn btn-sm btn-danger" onClick={handleDelete}>
-                  Delete
-                </button>
-                <button className="btn btn-sm btn-secondary" onClick={handleToggleEnabled}>
-                  {host.enabled ? 'Disable' : 'Enable'}
-                </button>
-              </div>
+              {showDeleteConfirm ? (
+                <div className="confirm-dialog">
+                  <p className="confirm-message">
+                    Are you sure you want to delete host "{host.host}"?
+                  </p>
+                  <div className="confirm-actions">
+                    <button className="btn btn-sm btn-danger" onClick={confirmDelete}>
+                      Delete
+                    </button>
+                    <button className="btn btn-sm btn-secondary" onClick={cancelDelete}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="host-card-actions">
+                  <button className="btn btn-sm btn-secondary" onClick={handleEdit}>
+                    Edit
+                  </button>
+                  <button className="btn btn-sm btn-secondary" onClick={handleDuplicate}>
+                    Duplicate
+                  </button>
+                  <button className="btn btn-sm btn-danger" onClick={handleDelete}>
+                    Delete
+                  </button>
+                  <button className="btn btn-sm btn-secondary" onClick={handleToggleEnabled}>
+                    {host.enabled ? 'Disable' : 'Enable'}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

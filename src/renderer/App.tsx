@@ -14,7 +14,10 @@ const App: React.FC = () => {
     hasChanges,
     contentRef,
     searchQuery,
+    showReloadConfirm,
     handleReload,
+    confirmReload,
+    cancelReload,
     handleSave,
     getTotalHostCount,
     handleDragEnd,
@@ -79,19 +82,34 @@ const App: React.FC = () => {
               <button className="btn btn-secondary" onClick={handleCollapseAll}>
                 Collapse All
               </button>
+              <SearchBox
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search hosts..."
+              />
             </div>
             <span className="host-count">{getTotalHostCount()} hosts</span>
           </div>
 
-          <SearchBox
-            value={searchQuery}
-            onChange={handleSearchChange}
-            placeholder="Search hosts..."
-          />
-
           {error && (
             <div className="alert alert-warning">
               {error}
+            </div>
+          )}
+
+          {showReloadConfirm && (
+            <div className="alert alert-confirm">
+              <p className="confirm-message">
+                You have unsaved changes. Are you sure you want to reload?
+              </p>
+              <div className="confirm-actions">
+                <button className="btn btn-sm btn-danger" onClick={confirmReload}>
+                  Reload
+                </button>
+                <button className="btn btn-sm btn-secondary" onClick={cancelReload}>
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
 

@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import * as jschardet from 'jschardet';
+import * as iconv from 'iconv-lite';
 
 // Get SSH config file path
 export function getSSHConfigPath(): string {
@@ -17,10 +19,31 @@ export function fileExists(filePath: string): boolean {
   }
 }
 
-// Read file content
+// Detect file encoding and return detected encoding name
+function detectEncoding(buffer: Buffer): string {
+  const detected = jschardet.detect(buffer.toString('binary'));
+  return detected.encoding || 'UTF-8';
+}
+
+// Read file content with encoding detection
 export function readFile(filePath: string): string {
   try {
-    return fs.readFileSync(filePath, 'utf-8');
+    // Read file as buffer first
+    const buffer = fs.readFileSync(filePath);
+
+    // Detect encoding
+    const encoding = detectEncoding(buffer);
+
+    // If Shift_JIS or similar encoding is detected, convert to UTF-8
+    if (encoding.toUpperCase().includes('SHIFT') ||
+        encoding.toUpperCase().includes('SJIS') ||
+        encoding.toUpperCase().includes('WINDOWS-31J')) {
+      // Convert from Shift_JIS to UTF-8
+      return iconv.decode(buffer, 'Shift_JIS');
+    }
+
+    // For UTF-8 or other encodings, decode as UTF-8
+    return buffer.toString('utf-8');
   } catch (error) {
     throw new Error(`Failed to read file: ${error}`);
   }
