@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { SSHHostEntry, SSHProperty } from '../../types/ssh-config';
-import { isMultiValueProperty, isToggleableProperty, COMMON_SSH_PROPERTIES } from '../../constants/ssh-properties';
+import { isMultiValueProperty, isToggleableProperty, COMMON_SSH_PROPERTIES, extractLocalForwardPort } from '../../constants/ssh-properties';
 
 interface HostEditFormProps {
   host: SSHHostEntry;
@@ -43,6 +43,34 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
     });
 
     return result;
+  }, [editedHost.properties]);
+
+  // Detect duplicate LocalForward ports (only for enabled entries)
+  const duplicatePortIndices = useMemo(() => {
+    const duplicates = new Set<number>();
+    const portToIndices = new Map<string, number[]>();
+
+    // Collect all LocalForward entries with their ports
+    editedHost.properties.forEach((prop, index) => {
+      if (prop.key === 'LocalForward' && prop.enabled) {
+        const port = extractLocalForwardPort(prop.value);
+        if (port) {
+          if (!portToIndices.has(port)) {
+            portToIndices.set(port, []);
+          }
+          portToIndices.get(port)!.push(index);
+        }
+      }
+    });
+
+    // Mark indices with duplicate ports
+    portToIndices.forEach((indices) => {
+      if (indices.length > 1) {
+        indices.forEach(index => duplicates.add(index));
+      }
+    });
+
+    return duplicates;
   }, [editedHost.properties]);
 
   const handleHostChange = (field: string, value: string) => {
@@ -187,33 +215,37 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
               )}
             </div>
             <div className="property-group-values">
-              {group.properties.map((prop) => (
-                <div key={prop.originalIndex} className="property-value-row">
-                  <input
-                    type="text"
-                    value={prop.value}
-                    onChange={(e) =>
-                      handlePropertyValueChange(prop.originalIndex, e.target.value)
-                    }
-                    placeholder="Property value"
-                    className="form-input property-value-input"
-                  />
-                  {group.isToggleable && (
+              {group.properties.map((prop) => {
+                const hasDuplicatePort = duplicatePortIndices.has(prop.originalIndex);
+                return (
+                  <div key={prop.originalIndex} className="property-value-row">
+                    <input
+                      type="text"
+                      value={prop.value}
+                      onChange={(e) =>
+                        handlePropertyValueChange(prop.originalIndex, e.target.value)
+                      }
+                      placeholder="Property value"
+                      className={`form-input property-value-input ${hasDuplicatePort ? 'input-warning' : ''}`}
+                      title={hasDuplicatePort ? 'Warning: Duplicate local port detected' : ''}
+                    />
+                    {group.isToggleable && (
+                      <button
+                        className={`btn btn-sm ${prop.enabled ? 'btn-secondary' : 'btn-success'}`}
+                        onClick={() => handleTogglePropertyEnabled(prop.originalIndex)}
+                      >
+                        {prop.enabled ? 'Disable' : 'Enable'}
+                      </button>
+                    )}
                     <button
-                      className={`btn btn-sm ${prop.enabled ? 'btn-secondary' : 'btn-success'}`}
-                      onClick={() => handleTogglePropertyEnabled(prop.originalIndex)}
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleRemovePropertyValue(prop.originalIndex)}
                     >
-                      {prop.enabled ? 'Disable' : 'Enable'}
+                      Remove
                     </button>
-                  )}
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleRemovePropertyValue(prop.originalIndex)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}

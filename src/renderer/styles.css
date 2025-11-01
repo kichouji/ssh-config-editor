@@ -462,6 +462,12 @@ body {
   opacity: 0.5;
 }
 
+.property-item.property-warning {
+  background-color: #3e3216;
+  border-left: 3px solid #f0b232;
+  padding-left: 9px;
+}
+
 .property-key {
   color: #9cdcfe;
   font-weight: 500;
@@ -581,6 +587,16 @@ body {
 .form-input:focus {
   outline: none;
   border-color: #0e639c;
+}
+
+.input-warning {
+  border-color: #f0b232 !important;
+  background-color: #3e3216 !important;
+}
+
+.input-warning:focus {
+  border-color: #f0b232 !important;
+  box-shadow: 0 0 0 2px rgba(240, 178, 50, 0.2);
 }
 
 .form-section {

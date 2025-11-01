@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
 import { SSHHostEntry, SSHProperty } from '../../types/ssh-config';
 import HostEditForm from './HostEditForm';
+import { extractLocalForwardPort } from '../../constants/ssh-properties';
 
 interface HostCardProps {
   host: SSHHostEntry;
@@ -100,6 +101,34 @@ const HostCard: React.FC<HostCardProps> = ({
     }
   };
 
+  // Detect duplicate LocalForward ports (only for enabled entries)
+  const duplicatePortIndices = useMemo(() => {
+    const duplicates = new Set<number>();
+    const portToIndices = new Map<string, number[]>();
+
+    // Collect all LocalForward entries with their ports
+    host.properties.forEach((prop, index) => {
+      if (prop.key === 'LocalForward' && prop.enabled) {
+        const port = extractLocalForwardPort(prop.value);
+        if (port) {
+          if (!portToIndices.has(port)) {
+            portToIndices.set(port, []);
+          }
+          portToIndices.get(port)!.push(index);
+        }
+      }
+    });
+
+    // Mark indices with duplicate ports
+    portToIndices.forEach((indices) => {
+      if (indices.length > 1) {
+        indices.forEach(index => duplicates.add(index));
+      }
+    });
+
+    return duplicates;
+  }, [host.properties]);
+
   return (
     <div ref={cardRef} className={`host-card ${!host.enabled ? 'disabled' : ''}`}>
       <div className="host-card-header" onClick={toggleExpand}>
@@ -125,15 +154,19 @@ const HostCard: React.FC<HostCardProps> = ({
             <>
               {host.properties.length > 0 ? (
                 <div className="properties-list">
-                  {host.properties.map((prop, index) => (
-                    <div
-                      key={index}
-                      className={`property-item ${!prop.enabled ? 'disabled' : ''}`}
-                    >
-                      <span className="property-key">{prop.key}</span>
-                      <span className="property-value">{prop.value}</span>
-                    </div>
-                  ))}
+                  {host.properties.map((prop, index) => {
+                    const hasDuplicatePort = duplicatePortIndices.has(index);
+                    return (
+                      <div
+                        key={index}
+                        className={`property-item ${!prop.enabled ? 'disabled' : ''} ${hasDuplicatePort ? 'property-warning' : ''}`}
+                        title={hasDuplicatePort ? 'Warning: Duplicate local port detected' : ''}
+                      >
+                        <span className="property-key">{prop.key}</span>
+                        <span className="property-value">{prop.value}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="no-properties">No properties configured</p>
