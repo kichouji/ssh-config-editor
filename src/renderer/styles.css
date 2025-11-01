@@ -681,6 +681,30 @@ body {
   align-items: center;
 }
 
+.property-reorder-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.btn-reorder {
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1;
+  min-width: 24px;
+  background-color: #3e3e42;
+  color: #cccccc;
+}
+
+.btn-reorder:hover:not(:disabled) {
+  background-color: #4e4e52;
+}
+
+.btn-reorder:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .form-actions {
   display: flex;
   gap: 8px;

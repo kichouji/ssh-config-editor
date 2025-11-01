@@ -92,6 +92,34 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
     });
   };
 
+  const handleMovePropertyUp = (propertyIndex: number) => {
+    if (propertyIndex === 0) return; // Already at the top
+
+    const newProperties = [...editedHost.properties];
+    // Swap with previous property
+    [newProperties[propertyIndex - 1], newProperties[propertyIndex]] =
+      [newProperties[propertyIndex], newProperties[propertyIndex - 1]];
+
+    setEditedHost({
+      ...editedHost,
+      properties: newProperties,
+    });
+  };
+
+  const handleMovePropertyDown = (propertyIndex: number) => {
+    if (propertyIndex === editedHost.properties.length - 1) return; // Already at the bottom
+
+    const newProperties = [...editedHost.properties];
+    // Swap with next property
+    [newProperties[propertyIndex], newProperties[propertyIndex + 1]] =
+      [newProperties[propertyIndex + 1], newProperties[propertyIndex]];
+
+    setEditedHost({
+      ...editedHost,
+      properties: newProperties,
+    });
+  };
+
   const handleAddPropertyValue = (key: string) => {
     // Add an empty property value that user can fill in
     setEditedHost({
@@ -195,6 +223,8 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
             <div className="property-group-values">
               {group.properties.map((prop) => {
                 const hasDuplicatePort = duplicatePortIndices.has(prop.originalIndex);
+                const isFirst = prop.originalIndex === 0;
+                const isLast = prop.originalIndex === editedHost.properties.length - 1;
                 return (
                   <div key={prop.originalIndex} className="property-value-row">
                     <input
@@ -207,6 +237,24 @@ const HostEditForm: React.FC<HostEditFormProps> = ({ host, onSave, onCancel }) =
                       className={`form-input property-value-input ${hasDuplicatePort ? 'input-warning' : ''}`}
                       title={hasDuplicatePort ? 'Warning: Duplicate local port detected' : ''}
                     />
+                    <div className="property-reorder-buttons">
+                      <button
+                        className="btn btn-sm btn-reorder"
+                        onClick={() => handleMovePropertyUp(prop.originalIndex)}
+                        disabled={isFirst}
+                        title="Move up"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        className="btn btn-sm btn-reorder"
+                        onClick={() => handleMovePropertyDown(prop.originalIndex)}
+                        disabled={isLast}
+                        title="Move down"
+                      >
+                        ↓
+                      </button>
+                    </div>
                     {group.isToggleable && (
                       <button
                         className={`btn btn-sm ${prop.enabled ? 'btn-secondary' : 'btn-success'}`}
